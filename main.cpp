@@ -1,11 +1,9 @@
 #include <iostream>
-#include <string.h>
-#include <conio.h>
+#include <string>
 
 using namespace std;
 
-int SIZE = 3;
-char board[3][3] = {{' ', 'O', 'O'}, {' ', 'X', ' '}, {' ', ' ', ' '}};
+char board[3][3] = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}};
 
 void printBoard()
 {
@@ -56,11 +54,11 @@ bool isWinner()
 {
     for (int i = 0; i < 3; i++)
     {
-        if (board[i][0] != ' ' and board[i][0] == board[i][1] != ' ' and board[i][2] == board[i][0])
+        if (board[i][0] != ' ' and board[i][0] == board[i][1] and board[i][2] == board[i][0])
         {
             return true;
         }
-        else if (board[0][i] != ' ' and board[0][i] == board[1][i] != ' ' and board[2][i] == board[0][i])
+        else if (board[0][i] != ' ' and board[0][i] == board[1][i] and board[2][i] == board[0][i])
         {
             return true;
         }
