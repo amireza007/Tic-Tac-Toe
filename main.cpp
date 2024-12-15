@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <typeinfo>
+#include <limits>
 
 using namespace std;
 
@@ -28,7 +30,7 @@ void printBoard()
 
 bool isValidChoice(int position)
 {
-    if (position < 1 or position > 9)
+    if (position < 1 || position > 9)
         return false;
 
     int row = (position - 1) / 3;
@@ -54,19 +56,19 @@ bool isWinner()
 {
     for (int i = 0; i < 3; i++)
     {
-        if (board[i][0] != ' ' and board[i][0] == board[i][1] and board[i][2] == board[i][0])
+        if (board[i][0] != ' ' && board[i][0] == board[i][1] && board[i][2] == board[i][0])
         {
             return true;
         }
-        else if (board[0][i] != ' ' and board[0][i] == board[1][i] and board[2][i] == board[0][i])
+        else if (board[0][i] != ' ' && board[0][i] == board[1][i] && board[2][i] == board[0][i])
         {
             return true;
         }
     }
 
-    if (board[0][0] != ' ' and board[1][1] == board[0][0] and board[2][2] == board[0][0])
+    if (board[0][0] != ' ' && board[1][1] == board[0][0] && board[2][2] == board[0][0])
         return true;
-    else if (board[0][2] != ' ' and board[1][1] == board[0][2] and board[2][0] == board[0][2])
+    else if (board[0][2] != ' ' && board[1][1] == board[0][2] && board[2][0] == board[0][2])
         return true;
 
     return false;
@@ -124,6 +126,10 @@ void playGame()
         {
             cout << "Invalid Choice! ";
             printDots(3);
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(),
+                '\n');
+            cin.clear();
             continue;
         }
 
@@ -132,10 +138,11 @@ void playGame()
         else if (isDraw())
             draw = true;
         player = (player + 1) % 2;
+        choice = 0;
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     playGame();
     return 0;
