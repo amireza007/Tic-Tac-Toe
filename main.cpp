@@ -30,6 +30,16 @@ void printBoard()
     cout << "\n\n\n";
 }
 
+int numOfEmptyCells() {
+
+    int nOfEmptyCells = 9;
+    for (int i = 0; i<3; i++){
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] != ' ') nOfEmptyCells--;
+        }
+    }
+    return nOfEmptyCells;
+}
 bool isValidChoice(int position)
 {
     if (position < 1 || position > 9)
@@ -120,16 +130,18 @@ int MiniMax(char nodes[3][3], int depth, bool maximizingPlayer) {
         return value;
     }
 }
+
 // we don't need alpha-beta pruning. We, Because searching is "Easy", as the heuristic is not good!
 void aiMove() {
     // making a random move
     for (int i; i < 9; i++) {
         int move = 1 + (rand() % 9);
-        if (isValidChoice(move))
-            if (MiniMax(board,9,false) == 1)
+        if (isValidChoice(move)) {
+            makeMove(move, 2);
+            if (MiniMax(board, 9, false) == 1) //why in the world 9?!?! It should be nOfEmptyCells!
                 return;
+        }
     }
-    
 }
 
 void playGame(int mode)
@@ -189,5 +201,6 @@ int main(int argc, char* argv[])
 {
     int mode = 1; //1 is for computer vs human
     playGame(mode);
+
     return 0;
 }
