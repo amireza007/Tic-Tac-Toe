@@ -1,13 +1,25 @@
 #include <iostream>
 #include <string>
-#include <typeinfo>
-#include <limits>
-#include <stdio.h>
-
+#include <cstdlib>
+#include <vector>
+#include <array>
 using namespace std;
+#define INF 100000
 
-char board[3][3] = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}};
-int gamestate = -2; //-2 means "game isn't finished yet, 0 = draw, 1 = O won, -1 = X won
+char board[3][3] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} };
+int num_of_visited_nodes = 0;
+int num_of_visited_nodes2 = 0;
+int num_of_empty_cells = 9;
+
+vector<int> emptyCellsList()
+{
+    vector<int> result;
+    for (int i = 1; i <= 9; i++) {
+        if (board[(i - 1) / 3][(i - 1) % 3] == ' ')
+            result.push_back(i);
+    }
+    return result;
+}
 
 void printBoard()
 {
@@ -16,8 +28,8 @@ void printBoard()
     string indent = "\t\t\t";
 
     cout << "\n\n\n";
-    cout << "\t\t   Player 1 (X) - Player 2 (O)   \n\n\n"
-         << endl;
+    cout << "\t\t   Player 1 (O) - Player 2 (X)   \n\n\n"
+        << endl;
     cout << indent << v_line << endl;
     cout << indent << "  " << board[0][0] << "  |  " << board[0][1] << "  |  " << board[0][2] << endl;
     cout << indent << h_line << endl;
@@ -30,16 +42,6 @@ void printBoard()
     cout << "\n\n\n";
 }
 
-int numOfEmptyCells() {
-
-    int nOfEmptyCells = 9;
-    for (int i = 0; i<3; i++){
-        for (int j = 0; j < 3; j++) {
-            if (board[i][j] != ' ') nOfEmptyCells--;
-        }
-    }
-    return nOfEmptyCells;
-}
 bool isValidChoice(int position)
 {
     if (position < 1 || position > 9)
@@ -54,43 +56,53 @@ bool isValidChoice(int position)
     return true;
 }
 
-void makeMove(int position, int player)
+void makeMove(int position, int player, char board[3][3])
 {
-    char symbol = player == 0 ? 'X' : 'O';
+    char symbol = player == 1 ? 'X' : 'O';
 
     int row = (position - 1) / 3;
     int col = (position - 1) % 3;
 
     board[row][col] = symbol;
-   
 }
 
-bool isWinner()
+
+int isWinner()
 {
     for (int i = 0; i < 3; i++)
     {
-        if (board[i][0] != ' ' && board[i][0] == board[i][1] && board[i][2] == board[i][0]) // row win
+        if (board[i][0] != ' ' && board[i][0] == board[i][1] && board[i][2] == board[i][0])
         {
-            gamestate = -1 ? board[i][0] == 'X' : +1;
-            return true;
+            if (board[i][0] == 'X')
+                return 1;
+            else
+                return -1;
         }
-        else if (board[0][i] != ' ' && board[0][i] == board[1][i] && board[2][i] == board[0][i]) // column win
+        else if (board[0][i] != ' ' && board[0][i] == board[1][i] && board[2][i] == board[0][i])
         {
-            gamestate = -1 ? board[0][i] == 'X' : +1;
-            return true;
+            if (board[0][i] == 'X')
+                return 1;
+            else
+                return -1;
         }
     }
 
-    if (board[0][0] != ' ' && board[1][1] == board[0][0] && board[2][2] == board[0][0])
-    {
-        gamestate = -1 ? board[0][0] == 'X' : +1;
-        return true;
+    if (board[0][0] != ' ' && board[1][1] == board[0][0] && board[2][2] == board[0][0]) {
+        if (board[0][0] == 'X')
+            return 1;
+        else
+            return -1;
     }
-    else if (board[0][2] != ' ' && board[1][1] == board[0][2] && board[2][0] == board[0][2]){
-        gamestate = -1 ? board[0][2] == 'X' : +1;
-        return true;
+        
+        
+    else if (board[0][2] != ' ' && board[1][1] == board[0][2] && board[2][0] == board[0][2]) {
+        if (board[0][2] == 'X')
+            return 1;
+        else
+            return -1;
     }
-    return false;
+
+    return 0;
 }
 
 bool isDraw()
@@ -99,7 +111,98 @@ bool isDraw()
         for (int j = 0; j < 3; j++)
             if (board[i][j] == ' ')
                 return false;
+
     return true;
+}
+int bestmaxPos;
+int bestminPos;
+
+
+int MiniMax(bool maximizingPlayer, int depth, char board[3][3])
+{
+    int utility;
+    if (depth == 0 || isWinner()) {
+        return isWinner();
+    }
+    if (maximizingPlayer) {
+        utility = -INF;
+        int position;
+        for (int i : emptyCellsList()) {
+            makeMove(i, 1, board);
+            num_of_visited_nodes++;
+            int temp = utility;
+
+            utility = max(utility,MiniMax(false, depth - 1, board));
+            
+            if (temp < utility)
+                position = i;
+            board[(i - 1) / 3][(i - 1) % 3] = ' '; //undo the move
+        }
+        bestmaxPos = position;
+        return utility;
+    }
+    if(!maximizingPlayer) {//minimizing player, i.e. 'O'
+        int utility = INF;
+        int position;
+        for (int i : emptyCellsList()) {
+            int temp2 = utility;
+            makeMove(i, 0, board);
+            num_of_visited_nodes++;
+            utility = min(utility,MiniMax(true, depth - 1, board));            
+            if (temp2 > utility)
+                position = i;
+            board[(i - 1) / 3][(i - 1) % 3] = ' '; //undo the move
+        }
+        bestminPos = position;
+        return utility;
+    }
+}
+
+
+int alphaBetaPrune(bool maximizingPlayer, int depth, char board[3][3], int alpha = -INF, int beta = INF)
+{
+    int utility;
+
+    if (depth == 0 || isWinner()) {
+        return isWinner();
+    }
+    if (maximizingPlayer) {
+        utility = -INF;
+        int position;
+        for (int i : emptyCellsList()) {
+            makeMove(i, 1, board);
+            num_of_visited_nodes2++;
+            int temp = utility;
+
+            utility = max(utility, alphaBetaPrune(false, depth - 1, board,alpha,beta));
+            board[(i - 1) / 3][(i - 1) % 3] = ' '; //undo the move
+            if (utility >= beta)
+                break;
+            alpha = max(alpha, utility);
+            if (temp < utility)
+                position = i;
+        }
+        bestmaxPos = position;
+        return utility;
+    }
+    if (!maximizingPlayer) {//minimizing player, i.e. 'O'
+        int utility = INF;
+        int position;
+        for (int i : emptyCellsList()) {
+            int temp2 = utility;
+            makeMove(i, 0, board);
+            num_of_visited_nodes2++;
+            utility = min(utility, alphaBetaPrune(true, depth - 1, board, alpha, beta));
+            board[(i - 1) / 3][(i - 1) % 3] = ' '; //undo the move
+            if (utility <= alpha)
+                break;
+            beta = min(beta, utility);
+            if (temp2 > utility)
+                position = i;
+        }
+        bestminPos = position;
+        return utility;
+    }
 }
 
 void printDots(int n)
@@ -107,55 +210,57 @@ void printDots(int n)
     for (int i = 0; i < n; i++)
     {
         cout << ".";
-        system("sleep 0.5");
-    }
-}
-// We should have Memoized, we ain't no stupid! => alpha-beta Pruning
-int MiniMax(char nodes[3][3], int depth, bool maximizingPlayer) {
-    if (depth == 0 || gamestate != -2)
-        return gamestate;
-    else if (maximizingPlayer) {
-        int value = -10000000;
-        for (int i; i < depth; i++) { //WTF does Depth mean? Depth should be the number of empty cells!
-            // make a move and update gamestate!
-            value = std::max(value, MiniMax(nodes, depth - 1, false));
-        }
-        return value;
-    }
-    else {
-        int value = +1000000;
-        for (int i; i < depth; i++) {
-            value = std::min(value, MiniMax(nodes, depth - 1, false));
-        }
-        return value;
+        system("timeout 1");
     }
 }
 
-// we don't need alpha-beta pruning. We, Because searching is "Easy", as the heuristic is not good!
-void aiMove() {
-    // making a random move
-    for (int i; i < 9; i++) {
-        int move = 1 + (rand() % 9);
-        if (isValidChoice(move)) {
-            makeMove(move, 2);
-            if (MiniMax(board, 9, false) == 1) //why in the world 9?!?! It should be nOfEmptyCells!
-                return;
-        }
-    }
-}
-
-void playGame(int mode)
+void playGame()
 {
-    int choice = 0;
-    int player = 0;
-    int winner = 0; //if mode is 1, player 2 becomes the Computer
+    int choice = 0; 
+    int player = 0; //'X' is maximizingPlayer (i.e. 'X' = 1)
+    int winner = 0;
+    bool HumansFirst = true;
+    bool Ai_mode = false;
     bool draw = false;
-    if (mode == 1)
-        player = 2; //technically, player 3 is the ai... whatever!
+    int MiniMaxChoice = NULL;
+    int alphabetaChoice = NULL;
+    num_of_visited_nodes = 0;
+    num_of_visited_nodes2 = 0;
+    cout << "type 0 for <Human vs Human> and 1 for <Human vs Ai>: ";
+    cin >> Ai_mode;
+    if (Ai_mode) {
+        cout << "type 1 if you wanna be the first to play; 0 otherwise: ";
+        cin >> HumansFirst;
+        if (!HumansFirst) {
+            cout << "\t\t\tHUMAN VS Ai" << endl;
+            player = 1;
+            MiniMax(player == 1 ? true : false, size(emptyCellsList()), board);
+            MiniMaxChoice = bestmaxPos;
+
+            alphaBetaPrune(player == 1 ? true : false, size(emptyCellsList()), board);
+            alphabetaChoice = bestmaxPos;
+
+            makeMove(bestmaxPos, player, board);
+            player = (player + 1) % 2;
+        }
+    }
     while (true)
     {
         system("cls");
-        printBoard(); 
+        printBoard();
+        if (Ai_mode) {
+            cout << "\t\t\tHUMAN VS Ai" << endl;
+            
+            cout << "number of visited nodes by Minimax: " << num_of_visited_nodes << endl;
+            cout << "number of nodes visited by Alpha-Beta prunning: " << num_of_visited_nodes2 << endl;
+            if (num_of_visited_nodes != 0)
+                cout << "=>>>>>> " << 100 - 100*((float) num_of_visited_nodes2/num_of_visited_nodes) << "% reduction!!" << endl;
+            cout << "MiniMax choice: " << MiniMaxChoice << endl;
+            cout << "Alpha-Beta prunning choice: " << alphabetaChoice << endl;
+        }
+        else {
+            cout << "\t\t\tHUMAN VS HUMAN" << endl;
+        }
         if (winner != 0)
         {
             cout << "Player " << winner << " Won! ";
@@ -168,39 +273,49 @@ void playGame(int mode)
             printDots(3);
             break;
         }
-
         cout << "Player " << player + 1 << " Turn: ";
-        if ((player + 1) / 3 == 1 && mode == 1)
-            aiMove();
-        else 
-            cin >> choice;
+        cin >> choice;
+        
         if (isValidChoice(choice))
         {
-            makeMove(choice, player);
+            
+            makeMove(choice, player, board);
+            
+            if (Ai_mode) {
+                num_of_visited_nodes = 0;
+                num_of_visited_nodes2 = 0;
+                player = (player + 1) % 2;
+                MiniMax(player == 1 ? true : false, size(emptyCellsList()), board);
+                MiniMaxChoice = bestmaxPos;
+
+                alphaBetaPrune(player == 1 ? true : false, size(emptyCellsList()), board);
+                alphabetaChoice = bestmaxPos;
+
+                makeMove(bestmaxPos, player, board);
+                player = (player + 1) % 2;
+            }
         }
+
         else
         {
             cout << "Invalid Choice! ";
             printDots(3);
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(),
-                '\n');
-            cin.clear();
             continue;
         }
-        if (isWinner())
+
+        if (isWinner() != 0)
             winner = player + 1;
         else if (isDraw())
             draw = true;
-        player = (player + 1) % 2;
-        choice = 0;
+
+        if (!Ai_mode)
+            player = (player + 1) % 2;
+        
     }
 }
 
-int main(int argc, char* argv[])
-{
-    int mode = 1; //1 is for computer vs human
-    playGame(mode);
-
+int main()
+{   
+    playGame();
     return 0;
 }
